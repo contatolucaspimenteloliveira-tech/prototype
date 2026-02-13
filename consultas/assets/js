@@ -1,1 +1,280 @@
+document.addEventListener('mousemove', (e) => {
+  const x = (e.clientX / window.innerWidth) * 100;
+  const y = (e.clientY / window.innerHeight) * 100;
+  document.documentElement.style.setProperty('--mouse-x', `${x}%`);
+  document.documentElement.style.setProperty('--mouse-y', `${y}%`);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.feature-card').forEach((card) => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty('--card-mouse-x', `${x}px`);
+      card.style.setProperty('--card-mouse-y', `${y}px`);
+    });
+  });
+});
+
+const defaultConfig = {
+  hero_title: 'Consulte CPF, CNPJ, CEP e Placa',
+  hero_subtitle: 'Tudo em um só lugar. Rápido, simples e gratuito.'
+};
+
+let config = { ...defaultConfig };
+
+if (window.elementSdk) {
+  window.elementSdk.init({
+    defaultConfig,
+    onConfigChange: async (newConfig) => {
+      config = { ...defaultConfig, ...newConfig };
+      if (newConfig.hero_title) {
+        document.getElementById('hero-title').textContent = newConfig.hero_title;
+      }
+      if (newConfig.hero_subtitle) {
+        document.getElementById('hero-subtitle').textContent = newConfig.hero_subtitle;
+      }
+    },
+    mapToCapabilities: () => ({
+      recolorables: [],
+      borderables: [],
+      fontEditable: undefined,
+      fontSizeable: undefined
+    }),
+    mapToEditPanelValues: (cfg) =>
+      new Map([
+        ['hero_title', cfg.hero_title || defaultConfig.hero_title],
+        ['hero_subtitle', cfg.hero_subtitle || defaultConfig.hero_subtitle]
+      ])
+  });
+}
+
+function openScreen(type) {
+  document.getElementById('hero-title').scrollIntoView({ behavior: 'smooth' });
+  document.querySelectorAll('.query-section').forEach((s) => s.classList.remove('active'));
+  document.getElementById('cards-container').classList.add('hidden');
+  document.getElementById(type + '-screen').classList.add('active');
+
+  if (type === 'cep') document.getElementById('cep-input').focus();
+  else if (type === 'cpf') document.getElementById('cpf-input').focus();
+  else if (type === 'cnpj') document.getElementById('cnpj-input').focus();
+  else if (type === 'placa') document.getElementById('placa-input').focus();
+}
+
+function goHome() {
+  document.querySelectorAll('.query-section').forEach((s) => s.classList.remove('active'));
+  document.getElementById('cards-container').classList.remove('hidden');
+
+  const ids = ['cep', 'cpf', 'cnpj', 'placa'];
+
+  ids.forEach((id) => {
+    const result = document.getElementById(`result-${id}`);
+    if (result) result.classList.add('result-hidden');
+  });
+
+  ids.forEach((id) => {
+    const input = document.getElementById(`${id}-input`);
+    if (input) input.value = '';
+  });
+
+  document.getElementById('hero-title').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showError(message) {
+  const toast = document.getElementById('error-toast');
+  document.getElementById('error-message').textContent = message;
+  toast.classList.remove('hidden');
+  setTimeout(() => toast.classList.add('hidden'), 4000);
+}
+
+function showComingSoon() {
+  showError('Este recurso estará disponível em breve! 🚀');
+}
+
+function sairApp() {
+  window.open('https://gaveblue.com', '_blank');
+  window.close();
+}
+
+function maskCEP(input) {
+  let value = input.value.replace(/\D/g, '');
+  if (value.length > 5) value = value.substring(0, 5) + '-' + value.substring(5, 8);
+  input.value = value;
+}
+
+async function consultCEP() {
+  const input = document.getElementById('cep-input').value.replace(/\D/g, '');
+  if (input.length !== 8) {
+    showError('Por favor, digite um CEP válido com 8 dígitos');
+    return;
+  }
+
+  const btn = document.getElementById('btn-cep');
+  btn.disabled = true;
+  btn.textContent = 'Consultando...';
+
+  try {
+    const response = await fetch(`https://viacep.com.br/ws/${input}/json/`);
+    const data = await response.json();
+
+    if (data.erro) {
+      showError('CEP não encontrado');
+      btn.disabled = false;
+      btn.textContent = 'Consultar CEP';
+      return;
+    }
+
+    const resultDiv = document.getElementById('result-cep');
+    resultDiv.classList.remove('result-hidden');
+    document.getElementById('cep-data').innerHTML = `
+      <div class="grid grid-cols-2 gap-4">
+        <div><span class="text-xs text-slate-500 uppercase">CEP</span><p class="text-slate-200 font-medium">${input}</p></div>
+        <div><span class="text-xs text-slate-500 uppercase">UF</span><p class="text-slate-200 font-medium">${data.uf || 'N/A'}</p></div>
+      </div>
+      <div><span class="text-xs text-slate-500 uppercase">Logradouro</span><p class="text-slate-200 font-medium">${data.logradouro || 'Não informado'}</p></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><span class="text-xs text-slate-500 uppercase">Bairro</span><p class="text-slate-200 font-medium">${data.bairro || 'N/A'}</p></div>
+        <div><span class="text-xs text-slate-500 uppercase">Cidade</span><p class="text-slate-200 font-medium">${data.localidade || 'N/A'}</p></div>
+      </div>
+    `;
+  } catch {
+    showError('Erro ao consultar CEP');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Consultar CEP';
+}
+
+function maskCPF(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (v.length > 11) v = v.substring(0, 11);
+
+  if (v.length > 9) v = v.substring(0, 3) + '.' + v.substring(3, 6) + '.' + v.substring(6, 9) + '-' + v.substring(9);
+  else if (v.length > 6) v = v.substring(0, 3) + '.' + v.substring(3, 6) + '.' + v.substring(6);
+  else if (v.length > 3) v = v.substring(0, 3) + '.' + v.substring(3);
+
+  input.value = v;
+}
+
+function validarCPF() {
+  const cpf = document.getElementById('cpf-input').value.replace(/\D/g, '');
+  if (cpf.length !== 11) {
+    showError('CPF deve conter 11 dígitos');
+    return;
+  }
+
+  const resultDiv = document.getElementById('result-cpf');
+  const isValid = validarCPFDigitos(cpf);
+  resultDiv.classList.remove('result-hidden');
+
+  document.getElementById('cpf-data').innerHTML = `
+    <div class="text-center">
+      <div class="inline-flex items-center gap-3 p-4 rounded-lg ${isValid ? 'bg-green-500/20' : 'bg-red-500/20'}">
+        <svg class="w-6 h-6 ${isValid ? 'text-green-400' : 'text-red-400'}" fill="currentColor" viewBox="0 0 20 20">
+          ${
+            isValid
+              ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>'
+              : '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>'
+          }
+        </svg>
+        <span class="text-lg font-semibold ${isValid ? 'text-green-400' : 'text-red-400'}">
+          ${isValid ? 'CPF Válido' : 'CPF Inválido'}
+        </span>
+      </div>
+    </div>
+  `;
+}
+
+function validarCPFDigitos(cpf) {
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+
+  let sum = 0;
+  for (let i = 1; i <= 9; i++) sum += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+
+  let remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cpf.substring(9, 10))) return false;
+
+  sum = 0;
+  for (let i = 1; i <= 10; i++) sum += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cpf.substring(10, 11))) return false;
+
+  return true;
+}
+
+function maskCNPJ(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (v.length > 14) v = v.substring(0, 14);
+
+  if (v.length > 12) v = v.substring(0, 2) + '.' + v.substring(2, 5) + '.' + v.substring(5, 8) + '/' + v.substring(8, 12) + '-' + v.substring(12);
+  else if (v.length > 8) v = v.substring(0, 2) + '.' + v.substring(2, 5) + '.' + v.substring(5, 8) + '/' + v.substring(8);
+  else if (v.length > 5) v = v.substring(0, 2) + '.' + v.substring(2, 5) + '.' + v.substring(5);
+  else if (v.length > 2) v = v.substring(0, 2) + '.' + v.substring(2);
+
+  input.value = v;
+}
+
+async function consultarCNPJ() {
+  const cnpj = document.getElementById('cnpj-input').value.replace(/\D/g, '');
+  if (cnpj.length !== 14) {
+    showError('CNPJ deve conter 14 dígitos');
+    return;
+  }
+
+  const btn = document.getElementById('btn-cnpj');
+  btn.disabled = true;
+  btn.textContent = 'Consultando...';
+
+  try {
+    const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      showError('CNPJ não encontrado');
+      btn.disabled = false;
+      btn.textContent = 'Consultar CNPJ';
+      return;
+    }
+
+    const resultDiv = document.getElementById('result-cnpj');
+    resultDiv.classList.remove('result-hidden');
+    document.getElementById('cnpj-data').innerHTML = `
+      <div class="space-y-3">
+        <div><span class="text-xs text-slate-500 uppercase">Razão Social</span><p class="text-slate-200 font-medium text-lg">${data.name || 'N/A'}</p></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><span class="text-xs text-slate-500 uppercase">CNPJ</span><p class="text-slate-200 font-medium">${cnpj}</p></div>
+          <div><span class="text-xs text-slate-500 uppercase">Situação</span><p class="text-slate-200 font-medium">${data.status || 'N/A'}</p></div>
+        </div>
+        <div><span class="text-xs text-slate-500 uppercase">Endereço</span><p class="text-slate-200 font-medium">${data.street || 'N/A'}, ${data.number || 'N/A'} - ${data.city || 'N/A'}</p></div>
+      </div>
+    `;
+  } catch {
+    showError('Erro ao consultar CNPJ');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Consultar CNPJ';
+}
+
+async function consultarPlaca() {
+  const placa = document.getElementById('placa-input').value.toUpperCase();
+  if (placa.length !== 7) {
+    showError('Placa deve conter 7 caracteres');
+    return;
+  }
+
+  const resultDiv = document.getElementById('result-placa');
+  resultDiv.classList.remove('result-hidden');
+  document.getElementById('placa-data').innerHTML = `
+    <div class="text-center p-4 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
+      <p class="text-yellow-300 font-medium">Recurso em desenvolvimento</p>
+      <p class="text-slate-400 text-sm mt-2">Em breve será possível consultar informações de placas</p>
+    </div>
+  `;
+}
 
