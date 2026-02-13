@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WeConsultas - GaveBlue</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/_sdk/element_sdk.js"></script>
+    <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="assets/css/consultas.css" />
+  </head>
+
+  <body class="text-white flex flex-col min-h-full">
+    <header class="w-full h-40 bg-slate-900/90 backdrop-blur border-b border-slate-700/30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-3 sm:gap-4">
+        <div class="flex items-center gap-3 sm:gap-4">
+          <a href="https://gaveblue.com" target="_blank" rel="noopener noreferrer" class="hover:opacity-80 transition-opacity flex-shrink-0">
+            <img src="https://i.imgur.com/Zih5jH8.png" alt="Logo" class="h-8 sm:h-10 w-auto" loading="lazy" />
+          </a>
+          <div class="w-px h-5 sm:h-6 bg-slate-600/50"></div>
+          <span class="font-bold text-lg sm:text-xl bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent truncate">WeConsultas</span>
+        </div>
+
+        <button onclick="sairApp()" class="flex items-center gap-2 px-4 sm:px-6 py-2 bg-slate-700/50 hover:bg-slate-600/70 rounded-lg transition-colors text-slate-300 hover:text-white text-sm sm:text-base font-medium flex-shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span class="hidden sm:inline">Sair</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="flex-1 pt-8 pb-6 px-4 sm:px-6">
+      <div class="max-w-7xl mx-auto">
+        <div class="mb-6">
+          <h1 id="hero-title" class="text-2xl sm:text-3xl font-extrabold text-center mb-2 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            Consulte CPF, CNPJ, CEP e Placa
+          </h1>
+          <p id="hero-subtitle" class="text-center text-slate-300 text-lg">
+            Tudo em um só lugar. Rápido, simples e gratuito.
+          </p>
+        </div>
+
+        <section id="cards-container" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+          <button onclick="openScreen('cep')" class="feature-card card-gradient rounded-2xl p-6 text-left cursor-pointer">
+            <svg class="w-8 h-8 text-blue-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            </svg>
+            <h3 class="font-bold text-lg">CEP</h3>
+            <p class="text-slate-400 text-sm">Consultar endereços</p>
+          </button>
+
+          <button onclick="showComingSoon()" class="feature-card card-gradient rounded-2xl p-6 text-left cursor-not-allowed opacity-60">
+            <svg class="w-8 h-8 text-green-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v10a2 2 0 002 2h5m0-4h10m-10 4h10m-10-4V8" />
+            </svg>
+            <h3 class="font-bold text-lg">CPF</h3>
+            <p class="text-slate-400 text-sm">Em breve</p>
+          </button>
+
+          <button onclick="showComingSoon()" class="feature-card card-gradient rounded-2xl p-6 text-left cursor-not-allowed opacity-60">
+            <svg class="w-8 h-8 text-purple-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="font-bold text-lg">CNPJ</h3>
+            <p class="text-slate-400 text-sm">Em breve</p>
+          </button>
+
+          <button onclick="showComingSoon()" class="feature-card card-gradient rounded-2xl p-6 text-left cursor-not-allowed opacity-60">
+            <svg class="w-8 h-8 text-cyan-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <h3 class="font-bold text-lg">Placa</h3>
+            <p class="text-slate-400 text-sm">Em breve</p>
+          </button>
+        </section>
+
+        <section id="home-screen" class="block"></section>
+
+        <section id="cep-screen" class="query-section card-gradient rounded-2xl p-8">
+          <div class="flex items-center gap-3 mb-6">
+            <button onclick="goHome()" class="p-2 hover:bg-slate-700/50 rounded-lg transition-colors">
+              <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h2 class="text-2xl font-bold">Consultar CEP</h2>
+          </div>
+
+          <div class="space-y-4">
+            <input id="cep-input" class="w-full p-3 rounded-xl input-field text-white placeholder-slate-500" placeholder="00000-000" maxlength="9" oninput="maskCEP(this)" />
+            <button id="btn-cep" onclick="consultCEP()" class="w-full py-3 rounded-xl btn-primary text-white font-semibold">Consultar CEP</button>
+
+            <div id="result-cep" class="result-hidden result-card rounded-xl p-5 mt-6">
+              <h3 class="font-semibold text-blue-400 mb-4">Resultado</h3>
+              <div id="cep-data" class="space-y-3"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="cpf-screen" class="query-section card-gradient rounded-2xl p-8">
+          <div class="flex items-center gap-3 mb-6">
+            <button onclick="goHome()" class="p-2 hover:bg-slate-700/50 rounded-lg transition-colors">
+              <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h2 class="text-2xl font-bold">Validar CPF</h2>
+          </div>
+
+          <div class="space-y-4">
+            <input id="cpf-input" class="w-full p-3 rounded-xl input-field text-white placeholder-slate-500" placeholder="000.000.000-00" maxlength="14" oninput="maskCPF(this)" />
+            <button id="btn-cpf" onclick="validarCPF()" class="w-full py-3 rounded-xl btn-primary text-white font-semibold">Validar CPF</button>
+
+            <div id="result-cpf" class="result-hidden result-card rounded-xl p-5 mt-6">
+              <div id="cpf-data"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="cnpj-screen" class="query-section card-gradient rounded-2xl p-8">
+          <div class="flex items-center gap-3 mb-6">
+            <button onclick="goHome()" class="p-2 hover:bg-slate-700/50 rounded-lg transition-colors">
+              <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h2 class="text-2xl font-bold">Consultar CNPJ</h2>
+          </div>
+
+          <div class="space-y-4">
+            <input id="cnpj-input" class="w-full p-3 rounded-xl input-field text-white placeholder-slate-500" placeholder="00.000.000/0000-00" maxlength="18" oninput="maskCNPJ(this)" />
+            <button id="btn-cnpj" onclick="consultarCNPJ()" class="w-full py-3 rounded-xl btn-primary text-white font-semibold">Consultar CNPJ</button>
+
+            <div id="result-cnpj" class="result-hidden result-card rounded-xl p-5 mt-6">
+              <h3 class="font-semibold text-purple-400 mb-4">Resultado</h3>
+              <div id="cnpj-data" class="space-y-3"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="placa-screen" class="query-section card-gradient rounded-2xl p-8">
+          <div class="flex items-center gap-3 mb-6">
+            <button onclick="goHome()" class="p-2 hover:bg-slate-700/50 rounded-lg transition-colors">
+              <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h2 class="text-2xl font-bold">Consultar Placa</h2>
+          </div>
+
+          <div class="space-y-4">
+            <input id="placa-input" class="w-full p-3 rounded-xl input-field text-white placeholder-slate-500 uppercase" placeholder="ABC1D23" maxlength="8" oninput="this.value = this.value.toUpperCase()" />
+            <button id="btn-placa" onclick="consultarPlaca()" class="w-full py-3 rounded-xl btn-primary text-white font-semibold">Consultar Placa</button>
+
+            <div id="result-placa" class="result-hidden result-card rounded-xl p-5 mt-6">
+              <h3 class="font-semibold text-cyan-400 mb-4">Resultado</h3>
+              <div id="placa-data" class="space-y-3"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="border-t border-slate-700/50 bg-slate-900/50 px-4 sm:px-6 py-6">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+          <a href="https://gaveblue.com" target="_blank" rel="noopener noreferrer" class="hover:opacity-80 transition-opacity flex-shrink-0">
+            <img src="https://i.imgur.com/Zih5jH8.png" alt="Logo" class="h-10 sm:h-12 w-auto" loading="lazy" />
+          </a>
+
+          <div class="flex items-center justify-center gap-2">
+            <a href="https://instagram.com/gaveblue" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 backdrop-blur-xl border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all shadow-lg flex-shrink-0" title="Instagram">
+              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="2"></rect>
+                <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"></circle>
+                <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor"></circle>
+              </svg>
+            </a>
+
+            <a href="https://wa.me/." target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 backdrop-blur-xl border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all shadow-lg flex-shrink-0" title="WhatsApp">
+              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+              </svg>
+            </a>
+
+            <a href="mailto:contato@gaveblue.com" class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 backdrop-blur-xl border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all shadow-lg flex-shrink-0" title="E-mail">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </a>
+          </div>
+
+          <div class="text-center sm:text-right">
+            <a href="https://gaveblue.com" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-white transition-colors text-xs sm:text-sm block">
+              gaveblue.com
+            </a>
+            <p class="text-slate-500 text-xs mt-1">© 2026 GaveBlue • Todos os direitos reservados</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <div id="error-toast" class="error-toast hidden">
+      <span id="error-message"></span>
+    </div>
+
+    <script src="assets/js/consultas.js" defer></script>
+  </body>
+</html>
