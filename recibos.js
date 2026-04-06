@@ -1,4 +1,4 @@
-﻿    // Variável global para controlar o zoom
+    // Variável global para controlar o zoom
     let zoomAtual = 100;
 
     // Função para aumentar zoom
@@ -29,10 +29,10 @@
         recibo.style.marginBottom = `${40 * escala}px`;
       });
       
-      // Mostrar toast com o nÃ­vel de zoom
+      // Mostrar toast com o nível de zoom
       mostrarToastZoom();
       
-      // Salvar preferÃªncia
+      // Salvar preferência
       localStorage.setItem('zoomRecibos', zoomAtual);
     }
 
@@ -77,7 +77,7 @@
       }
     });
 
-    // FunÃ§Ã£o para selecionar todos os recibos
+    // Função para selecionar todos os recibos
     function selecionarTodos() {
       const checkboxes = document.querySelectorAll('.checkbox-recibo');
       const todosEstaoSelecionados = Array.from(checkboxes).every(cb => cb.checked);
@@ -94,7 +94,7 @@
       });
     }
 
-    // FunÃ§Ã£o para alternar seleÃ§Ã£o de recibo
+    // Função para alternar seleção de recibo
     function toggleSelecaoRecibo(checkbox) {
       const recibo = checkbox.closest('.recibo');
       if (checkbox.checked) {
@@ -118,7 +118,7 @@
       document.getElementById('popup-confirmacao').classList.remove('hidden');
     }
 
-    // FunÃ§Ã£o para fechar popup de confirmaÃ§Ã£o
+    // Função para fechar popup de confirmação
     function fecharConfirmacao() {
       document.getElementById('popup-confirmacao').classList.add('hidden');
     }
@@ -235,9 +235,9 @@
       mostrarToastGlobal('Recibos excluídos com sucesso!', 'success', '✓', 2600);
     }
 
-    // FunÃ§Ã£o para adicionar recibo vazio
+    // Função para adicionar recibo vazio
     function adicionarReciboVazio() {
-      // Verificar se os recibos principais estÃ£o visÃ­veis
+      // Verificar se os recibos principais estão visíveis
       const reciboPadrao = document.getElementById('recibo');
       const reciboCompleto = document.getElementById('recibo-completo');
       const reciboSimplificado = document.getElementById('recibo-simplificado');
@@ -247,7 +247,7 @@
                                   (reciboSimplificado && reciboSimplificado.style.display !== 'none') ||
                                   (reciboCovre && reciboCovre.style.display !== 'none');
       
-      // Se nÃ£o hÃ¡ recibo principal visÃ­vel, mostrar o recibo do modelo atual
+      // Se não há recibo principal visível, mostrar o recibo do modelo atual
       if (!algumReciboVisivel) {
         mostrarReciboPrincipal();
         return;
@@ -316,7 +316,7 @@
       }, 100);
     }
 
-    // FunÃ§Ã£o para sair da aplica    Ã£o
+    // Função para sair da aplicação
     function sairAplicacao() {
       window.location.href = 'https://gaveblue.com';
     }
@@ -580,7 +580,7 @@
     function processarDataInteligente(valorData) {
       if (!valorData) return obterDataFormatada();
       
-      const meses = ['JANEIRO', 'FEVEREIRO', 'MARÃ‡O', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+      const meses = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
       
       if (typeof valorData === 'number') {
         const dataExcel = XLSX.SSF.parse_date_code(valorData);
@@ -592,7 +592,7 @@
       
       const valorStr = String(valorData).trim();
       
-      if (/^\d{2} DE [A-ZÃ‡ÃƒÃÃ‰ÃÃ“Ãš]+ DE \d{4}$/.test(valorStr.toUpperCase())) {
+      if (/^\d{2} DE [A-ZÇÃÁÉÍÓÚ]+ DE \d{4}$/.test(valorStr.toUpperCase())) {
         return valorStr.toUpperCase();
       }
       
@@ -684,7 +684,7 @@
       return 'R$ ' + valorNumerico.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    // VariÃ¡vel global para controlar o modelo atual
+    // Variável global para controlar o modelo atual
     let modeloAtual = 'padrao';
 
     function atualizarAssinaturaCompleta() {
@@ -697,7 +697,7 @@
       if (assinaturaCpf) assinaturaCpf.textContent = cpfcnpj ? cpfcnpj.value : '';
     }
 
-    // FunÃ§Ã£o auxiliar para mostrar recibo principal
+    // Função auxiliar para mostrar recibo principal
     function mostrarReciboPrincipal() {
       const reciboPadrao = document.getElementById('recibo');
       const reciboCompleto = document.getElementById('recibo-completo');
@@ -706,7 +706,7 @@
       
       // Debug: Verificar se elementos existem
       if (!reciboPadrao || !reciboCompleto || !reciboSimplificado || !reciboCovre) {
-        console.warn('Um ou mais elementos de recibo nÃ£o foram encontrados');
+        console.warn('Um ou mais elementos de recibo não foram encontrados');
       }
       
       if (modeloAtual === 'completo') {
@@ -731,7 +731,7 @@
         reciboCovre.style.display = 'none';
       }
       
-      // Rolar atÃ© o recibo principal
+      // Rolar até o recibo principal
       const reciboVisivel = modeloAtual === 'completo'
         ? reciboCompleto
         : (modeloAtual === 'simplificado' ? reciboSimplificado : (modeloAtual === 'covre' ? reciboCovre : reciboPadrao));
@@ -740,7 +740,7 @@
       }, 100);
     }
 
-    // FunÃ§Ã£o para alternar entre modelos
+    // Função para alternar entre modelos
     function alternarModelo() {
       const reciboPadrao = document.getElementById('recibo');
       const reciboCompleto = document.getElementById('recibo-completo');
@@ -788,12 +788,12 @@
       }, 100);
     }
 
-    // FunÃ§Ã£o para mostrar toast de alternÃ¢ncia de modelo
+    // Função para mostrar toast de alternância de modelo
     function mostrarToastAlternancia(mensagem) {
       mostrarToastGlobal(mensagem, 'info', '↺', 2000);
     }
 
-    // Carregar preferÃªncia do modelo ao iniciar
+    // Carregar preferência do modelo ao iniciar
     window.addEventListener('DOMContentLoaded', function() {
       const modeloSalvo = localStorage.getItem('modeloRecibo');
       const reciboPadrao = document.getElementById('recibo');
@@ -801,7 +801,7 @@
       const reciboSimplificado = document.getElementById('recibo-simplificado');
       const reciboCovre = document.getElementById('recibo-covre');
       
-      // Sempre comeÃ§ar com modelo padrÃ£o como padrÃ£o
+      // Sempre começar com modelo padrão como padrão
       reciboPadrao.style.display = 'block';
       reciboCompleto.style.display = 'none';
       reciboSimplificado.style.display = 'none';
@@ -864,7 +864,7 @@
       localStorage.setItem('footerHidden', isHidden ? 'true' : 'false');
     }
 
-    // Carregar preferÃªncia do rodapÃ© ao iniciar
+    // Carregar preferência do rodapé ao iniciar
     window.addEventListener('DOMContentLoaded', function() {
       const footerHidden = localStorage.getItem('footerHidden') === 'true';
       const footer = document.querySelector('.botoes');
@@ -880,33 +880,33 @@
       document.getElementById('popup-notificacoes').classList.remove('hidden');
     }
 
-    // FunÃ§Ã£o para fechar central de notificaÃ§Ãµes
+    // Função para fechar central de notificações
     function fecharNotificacoes() {
       document.getElementById('popup-notificacoes').classList.add('hidden');
     }
 
-    // Notificações prÃ©-definidas
+    // Notificações pré-definidas
     const notificacoesPadrao = [
       {
         id: 1,
-        titulo: 'âœ¨ Novo Recurso: Salvar Recibos',
-        descricao: 'Agora vocÃª pode salvar seus recibos no histÃ³rico com um Ãºnico clique! Use o botÃ£o "Salvar Recibo" na barra de ferramentas para manter seus recibos organizados.',
-        icone: 'ðŸ’¾'
+        titulo: 'Novo recurso: Salvar recibos',
+        descricao: 'Agora você pode salvar seus recibos no histórico com um único clique. Use o botão "Salvar Recibo" na barra de ferramentas para manter seus recibos organizados.',
+        icone: '💾'
       },
       {
         id: 2,
-        titulo: 'ðŸ“š Histórico de Recibos',
-        descricao: 'Acompanhe todos os recibos que vocÃª criou! Clique no botÃ£o de histÃ³rico para visualizar, editar ou restaurar recibos antigos.'
+        titulo: 'Histórico de recibos',
+        descricao: 'Acompanhe todos os recibos que você criou. Clique no botão de histórico para visualizar, editar ou restaurar recibos antigos.'
       },
       {
         id: 3,
-        titulo: 'ðŸ“¥ Download de Modelos de Planilhas',
-        descricao: 'Baixe modelos prontos para importar mÃºltiplos recibos de uma vez. DisponÃ­vel em duas versÃµes: PadrÃ£o (completo) e Simplificado (bÃ¡sico).'
+        titulo: 'Download de modelos de planilhas',
+        descricao: 'Baixe modelos prontos para importar múltiplos recibos de uma vez. Disponível em duas versões: Padrão (completo) e Simplificado (básico).'
       },
       {
         id: 4,
-        titulo: 'ðŸ“‹ ImportaÃ§Ã£o em Massa',
-        descricao: 'Importe vÃ¡rios recibos de uma vez usando planilhas Excel! Basta preparar seus dados no formato correto e clicar em "Importar Dados".'
+        titulo: 'Importação em massa',
+        descricao: 'Importe vários recibos de uma vez usando planilhas Excel. Basta preparar seus dados no formato correto e clicar em "Importar Dados".'
       },
       {
         id: 5,
@@ -915,17 +915,17 @@
       },
       {
         id: 6,
-        titulo: 'âš™ï¸ PersonalizaÃ§Ãµes Ampliadas',
+        titulo: 'Personalizações ampliadas',
         descricao: 'Gerencie seus emitentes e recebedores! Salve informações frequentemente usadas para agilizar o preenchimento de recibos futuros.'
       }
     ];
 
-    // FunÃ§Ã£o para inicializar notificaÃ§Ãµes
+    // Função para inicializar notificações
     function inicializarNotificacoes() {
       const notificacoesLidas = JSON.parse(localStorage.getItem('notificacoes-lidas') || '[]');
       const notificacoes = JSON.parse(localStorage.getItem('notificacoes') || JSON.stringify(notificacoesPadrao));
       
-      // Se nÃ£o houver notificaÃ§Ãµes salvas, usar as padrÃ£o
+      // Se não houver notificações salvas, usar as padrão
       if (!localStorage.getItem('notificacoes')) {
         localStorage.setItem('notificacoes', JSON.stringify(notificacoesPadrao));
       }
@@ -941,7 +941,7 @@
       container.innerHTML = '';
 
       if (notificacoes.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px 20px; color: #6b7280;">Todas as notificaÃ§Ãµes foram lidas!</div>';
+      container.innerHTML = '<div style="text-align: center; padding: 40px 20px; color: #6b7280;">Todas as notificações foram lidas!</div>';
         return;
       }
 
@@ -954,7 +954,7 @@
         item.innerHTML = `
           <p class="notificacao-titulo">
             ${notificacao.icone || 'ðŸ“¢'} ${notificacao.titulo}
-            ${estaLida ? '<span class="notificacao-badge-lida">âœ“ Lida</span>' : ''}
+            ${estaLida ? '<span class="notificacao-badge-lida">✓ Lida</span>' : ''}
           </p>
           <p class="notificacao-descricao">${notificacao.descricao}</p>
         `;
@@ -984,7 +984,7 @@
       
       carregarNotificacoes();
       atualizarBadgeNotificacoes();
-      mostrarMensagem('âœ… Todas as notificaÃ§Ãµes marcadas como lidas!', 'sucesso');
+      mostrarMensagem('Todas as notificações foram marcadas como lidas!', 'sucesso');
     }
 
     // FunÃ§Ã£o para atualizar badge de notificaÃ§Ãµes
@@ -1070,7 +1070,7 @@
       document.getElementById('novo-recebedor-nome').value = '';
       document.getElementById('novo-recebedor-cpf').value = '';
       carregarRecebedores();
-      mostrarMensagem('âœ… Recebedor adicionado com sucesso!', 'sucesso');
+      mostrarMensagem('Recebedor adicionado com sucesso!', 'sucesso');
     }
 
     // FunÃ§Ã£o para carregar recebedores
@@ -1114,14 +1114,14 @@
         const nomeInput = reciboMoyses.querySelector('.nome');
         if (nomeInput) nomeInput.value = recebedor.nome;
       } else {
-        // Formatar como "RAZAO SOCIAL, inscrita(a) sob o CPF/CNPJ NÂº 123..."
+        // Formatar como "RAZAO SOCIAL, inscrita(a) sob o CPF/CNPJ nº 123..."
         const cpfFormatado = formatarCpfCnpj2(recebedor.cpf);
-        const linhaFormatada = `${recebedor.nome}, inscrita(a) sob o CPF/CNPJ nÂº ${cpfFormatado}`;
+        const linhaFormatada = `${recebedor.nome}, inscrita(a) sob o CPF/CNPJ nº ${cpfFormatado}`;
         document.getElementById('recebedor').value = linhaFormatada;
       }
 
       fecharRecebedores();
-      mostrarMensagem('âœ… Recebedor carregado!', 'sucesso');
+      mostrarMensagem('Recebedor carregado!', 'sucesso');
     }
 
     // FunÃ§Ã£o para deletar recebedor
@@ -1130,7 +1130,7 @@
       recebedores = recebedores.filter(r => r.id != id);
       localStorage.setItem('recebedores', JSON.stringify(recebedores));
       carregarRecebedores();
-      mostrarMensagem('ðŸ—‘ï¸ Recebedor deletado!', 'sucesso');
+      mostrarMensagem('Recebedor deletado!', 'sucesso');
     }
 
     // FunÃ§Ã£o auxiliar para formatar CPF/CNPJ sem modificar o input
@@ -1231,7 +1231,7 @@
     // FunÃ§Ã£o para selecionar recebedor da sugestÃ£o
     function selecionarRecebedorSugestao(recebedor) {
       const cpfFormatado = formatarCpfCnpj2(recebedor.cpf);
-      const linhaFormatada = `${recebedor.nome}, inscrita(a) sob o CPF/CNPJ nÂº ${cpfFormatado}`;
+      const linhaFormatada = `${recebedor.nome}, inscrita(a) sob o CPF/CNPJ nº ${cpfFormatado}`;
       document.getElementById('recebedor').value = linhaFormatada;
       document.getElementById('sugestoes-recebedor').style.display = 'none';
     }
@@ -1297,7 +1297,7 @@
       document.getElementById('novo-emitente-nome').value = '';
       document.getElementById('novo-emitente-cpf').value = '';
       carregarEmitentes();
-      mostrarMensagem('âœ… Emitente adicionado com sucesso!', 'sucesso');
+      mostrarMensagem('Emitente adicionado com sucesso!', 'sucesso');
     }
 
     // FunÃ§Ã£o para carregar emitentes
@@ -1351,7 +1351,7 @@
       }
 
       fecharEmitentes();
-      mostrarMensagem('âœ… Emitente carregado!', 'sucesso');
+      mostrarMensagem('Emitente carregado!', 'sucesso');
     }
 
     // FunÃ§Ã£o para deletar emitente
@@ -1360,7 +1360,7 @@
       emitentes = emitentes.filter(e => e.id != id);
       localStorage.setItem('emitentes', JSON.stringify(emitentes));
       carregarEmitentes();
-      mostrarMensagem('ðŸ—‘ï¸ Emitente deletado!', 'sucesso');
+      mostrarMensagem('Emitente deletado!', 'sucesso');
     }
 
     // FunÃ§Ã£o para abrir histÃ³rico
@@ -1501,7 +1501,7 @@
       document.getElementById('recibos-gerados').appendChild(novoRecibo);
       atualizarContador();
       
-      mostrarMensagem('ðŸ“„ Recibo restaurado do histÃ³rico!', 'sucesso');
+      mostrarMensagem('Recibo restaurado do histórico!', 'sucesso');
     }
 
     // FunÃ§Ã£o para deletar recibo do histÃ³rico
@@ -1510,7 +1510,7 @@
       historico = historico.filter(h => h.id != id);
       localStorage.setItem('historico-recibos', JSON.stringify(historico));
       carregarHistorico();
-      mostrarMensagem('ðŸ—‘ï¸ Recibo deletado do histÃ³rico!', 'sucesso');
+      mostrarMensagem('Recibo deletado do histórico!', 'sucesso');
     }
 
     // FunÃ§Ã£o para limpar histÃ³rico completo
@@ -1518,7 +1518,7 @@
       if (confirm('Tem certeza que deseja limpar todo o histórico? Esta ação não poderá ser desfeita.')) {
         localStorage.removeItem('historico-recibos');
         carregarHistorico();
-        mostrarMensagem('ðŸ—‘ï¸ HistÃ³rico limpo!', 'sucesso');
+        mostrarMensagem('Histórico limpo!', 'sucesso');
       }
     }
 
@@ -1628,7 +1628,7 @@
         document.getElementById('assinaturaCpf').textContent = '';
       }
 
-      mostrarMensagem('âœ… Recibo salvo no histÃ³rico!', 'sucesso');
+      mostrarMensagem('Recibo salvo no histórico!', 'sucesso');
     }
 
     // FunÃ§Ã£o para baixar modelo de planilha padrÃ£o
@@ -1721,7 +1721,7 @@
     function numeroParaExtenso(valor) {
       if (!valor || isNaN(valor) || valor === 0) return '';
       
-      const unidades = ['', 'um', 'dois', 'trÃªs', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
+      const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
       const dez = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
       const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
       const centenas = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
@@ -1756,62 +1756,55 @@
       const reais = parseInt(partes[0]);
       const centavos = parseInt(partes[1]);
       
+      function converterNumeroInteiro(n) {
+        if (n === 0) return 'zero';
+        if (n < 1000) return converterGrupo(n);
+
+        if (n < 1000000) {
+          const milhares = Math.floor(n / 1000);
+          const resto = n % 1000;
+          let resultado = milhares === 1 ? 'mil' : `${converterGrupo(milhares)} mil`;
+
+          if (resto > 0) {
+            resultado += ' e ' + converterGrupo(resto);
+          }
+
+          return resultado;
+        }
+
+        if (n < 1000000000) {
+          const milhoes = Math.floor(n / 1000000);
+          const resto = n % 1000000;
+          let resultado = milhoes === 1 ? 'um milhão' : `${converterGrupo(milhoes)} milhões`;
+
+          if (resto > 0) {
+            resultado += resto < 100 ? ' e ' : ', ';
+            resultado += converterNumeroInteiro(resto);
+          }
+
+          return resultado;
+        }
+
+        const bilhoes = Math.floor(n / 1000000000);
+        const resto = n % 1000000000;
+        let resultado = bilhoes === 1 ? 'um bilhão' : `${converterGrupo(bilhoes)} bilhões`;
+
+        if (resto > 0) {
+          resultado += resto < 100 ? ' e ' : ', ';
+          resultado += converterNumeroInteiro(resto);
+        }
+
+        return resultado;
+      }
+
       let extenso = '';
-      
+
       if (reais === 0) {
         extenso = 'zero reais';
       } else if (reais === 1) {
         extenso = 'um real';
-      } else if (reais < 1000) {
-        extenso = converterGrupo(reais) + ' reais';
-      } else if (reais < 1000000) {
-        const milhares = Math.floor(reais / 1000);
-        const resto = reais % 1000;
-        
-        if (milhares === 1) {
-          extenso = 'mil';
-        } else {
-          extenso = converterGrupo(milhares) + ' mil';
-        }
-        
-        if (resto > 0) {
-          extenso += ' e ' + converterGrupo(resto);
-        }
-        extenso += ' reais';
       } else {
-        const milhoes = Math.floor(reais / 1000000);
-        const resto = reais % 1000000;
-        
-        if (milhoes === 1) {
-          extenso = 'um milhÃ£o';
-        } else {
-          extenso = converterGrupo(milhoes) + ' milhÃµes';
-        }
-        
-        if (resto > 0) {
-          if (resto < 1000) {
-            extenso += ' e ';
-          } else {
-            extenso += ', ';
-          }
-          
-          const milhares = Math.floor(resto / 1000);
-          const centenas = resto % 1000;
-          
-          if (milhares > 0) {
-            if (milhares === 1) {
-              extenso += 'mil';
-            } else {
-              extenso += converterGrupo(milhares) + ' mil';
-            }
-            if (centenas > 0) {
-              extenso += ' e ' + converterGrupo(centenas);
-            }
-          } else {
-            extenso += converterGrupo(centenas);
-          }
-        }
-        extenso += ' reais';
+        extenso = converterNumeroInteiro(reais) + ' reais';
       }
       
       if (centavos > 0) {
@@ -1849,7 +1842,7 @@
       }
     }
 
-    // FunÃ§Ã£o para formatar CPF/CNPJ
+    // Função para formatar CPF/CNPJ
     function formatarCpfCnpj(input) {
       let valor = input.value.replace(/\D/g, '');
       valor = valor.substring(0, 14);
@@ -1896,7 +1889,7 @@
       assinatura.textContent = nome || 'Assinatura';
     }
 
-    // Verificar se o recibo principal estÃ¡ preenchido
+    // Verificar se o recibo principal está preenchido
     function verificarReciboPrincipalPreenchido() {
       if (modeloAtual === 'completo') {
         const valor = document.getElementById('valor-completo').value.trim();
@@ -1923,7 +1916,7 @@
       }
     }
 
-    // FunÃ§Ã£o para alternar modo escuro
+    // Função para alternar modo escuro
     function toggleDarkMode() {
       const body = document.body;
       const isDark = body.classList.toggle('dark-mode');
@@ -1942,7 +1935,7 @@
       }
     }
 
-    // Carregar preferÃªncias ao iniciar (modo escuro)
+    // Carregar preferências ao iniciar (modo escuro)
     (function loadDarkMode() {
       const darkMode = localStorage.getItem('darkMode');
       if (darkMode === 'enabled') {
@@ -2406,7 +2399,7 @@
     window.addEventListener('resize', atualizarBotaoImpressao);
     window.addEventListener('DOMContentLoaded', atualizarBotaoImpressao);
 
-    // FunÃ§Ã£o para formatar moeda no modelo simplificado
+    // Função para formatar moeda no modelo simplificado
     function formatarMoedaSimples(input) {
       let valor = input.value.replace(/\D/g, '');
       
@@ -2427,9 +2420,9 @@
       }
     }
 
-    // FunÃ§Ã£o para obter data formatada
+    // Função para obter data formatada
     function obterDataFormatada() {
-      const meses = ['JANEIRO', 'FEVEREIRO', 'MARÃ‡O', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+      const meses = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
       const hoje = new Date();
       const dia = String(hoje.getDate()).padStart(2, '0');
       const mes = meses[hoje.getMonth()];
