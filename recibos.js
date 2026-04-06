@@ -235,6 +235,40 @@
       mostrarToastGlobal('Recibos excluídos com sucesso!', 'success', '✓', 2600);
     }
 
+    function incrementarNumeroSequencial(valorAtual) {
+      const valor = String(valorAtual || '').trim();
+      if (!/^\d+$/.test(valor)) return '';
+
+      const largura = valor.length;
+      const proximoNumero = String(parseInt(valor, 10) + 1);
+      return proximoNumero.padStart(largura, '0');
+    }
+
+    function obterProximoNumeroReciboCompleto() {
+      const numeros = [];
+
+      const numeroPrincipal = document.getElementById('numero-recibo-completo');
+      if (numeroPrincipal && /^\d+$/.test(numeroPrincipal.value.trim())) {
+        numeros.push(numeroPrincipal.value.trim());
+      }
+
+      document.querySelectorAll('#recibos-gerados .numero-recibo').forEach((campo) => {
+        const valor = campo.value.trim();
+        if (/^\d+$/.test(valor)) {
+          numeros.push(valor);
+        }
+      });
+
+      if (!numeros.length) return '';
+
+      const ultimoValor = numeros.reduce((atual, valor) => {
+        if (!atual) return valor;
+        return parseInt(valor, 10) >= parseInt(atual, 10) ? valor : atual;
+      }, '');
+
+      return incrementarNumeroSequencial(ultimoValor);
+    }
+
     // Função para adicionar recibo vazio
     function adicionarReciboVazio() {
       // Verificar se os recibos principais estão visíveis
@@ -271,6 +305,14 @@
       if (modeloAtual === 'padrao' || modeloAtual === 'completo') {
         const tituloConfig = window.elementSdk && window.elementSdk.config ? window.elementSdk.config.titulo_recibo : 'RECIBO';
         novoRecibo.querySelector('.titulo-modelo').textContent = tituloConfig || 'RECIBO';
+
+        if (modeloAtual === 'completo') {
+          const numeroInput = novoRecibo.querySelector('.numero-recibo');
+          const proximoNumero = obterProximoNumeroReciboCompleto();
+          if (numeroInput && proximoNumero) {
+            numeroInput.value = proximoNumero;
+          }
+        }
         
         const dataInput = novoRecibo.querySelector('.data');
         if (dataInput) {
@@ -1631,7 +1673,7 @@
       mostrarMensagem('Recibo salvo no histórico!', 'sucesso');
     }
 
-    // FunÃ§Ã£o para baixar modelo de planilha padrÃ£o
+    // Função para baixar modelo de planilha padrão
     function baixarModeloPadrao() {
       mostrarToastGlobal('Download do modelo padrão iniciado!', 'info', '↓', 2400);
       
@@ -1658,7 +1700,35 @@
       XLSX.writeFile(wb, 'modelo_recibos_padrao.xlsx');
     }
 
-    // FunÃ§Ã£o para baixar modelo de planilha simplificado
+    // Função para baixar modelo de planilha completo
+    function baixarModeloCompleto() {
+      mostrarToastGlobal('Download do modelo completo iniciado!', 'info', '↓', 2400);
+
+      const dados = [
+        ['NumeroRecibo', 'Valor', 'Recebedor', 'Referencia', 'Descricao', 'Emitente', 'CPFCNPJ', 'Data'],
+        ['0001', 'R$ 1.500,00', 'João Silva', 'Serviços de consultoria', 'Projeto X - Fase 1', 'Maria Santos', '123.456.789-00', '15/01/2024'],
+        ['0002', 'R$ 2.300,00', 'Pedro Costa', 'Manutenção predial', 'Reparo hidráulico', 'José Oliveira', '987.654.321-00', '20/01/2024']
+      ];
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(dados);
+
+      ws['!cols'] = [
+        { wch: 14 },
+        { wch: 15 },
+        { wch: 20 },
+        { wch: 25 },
+        { wch: 30 },
+        { wch: 20 },
+        { wch: 18 },
+        { wch: 12 }
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Recibos');
+      XLSX.writeFile(wb, 'modelo_recibos_completo.xlsx');
+    }
+
+    // Função para baixar modelo de planilha simplificado
     function baixarModeloSimplificado() {
       mostrarToastGlobal('Download do modelo simplificado iniciado!', 'info', '↓', 2400);
       
@@ -1682,12 +1752,12 @@
       XLSX.writeFile(wb, 'modelo_recibos_simplificado.xlsx');
     }
 
-    // Manter compatibilidade com nome antigo da funÃ§Ã£o
+    // Manter compatibilidade com nome antigo da função
     function baixarModeloPlanilha() {
       baixarModeloPadrao();
     }
 
-    // FunÃ§Ã£o para atualizar contador
+    // Função para atualizar contador
     function atualizarContador() {
       const recibosGerados = document.querySelectorAll('#recibos-gerados .recibo');
       const total = recibosGerados.length;
