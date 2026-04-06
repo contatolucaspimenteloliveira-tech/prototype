@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pt-BR">
  <head>
   <meta charset="UTF-8">
@@ -2623,8 +2623,9 @@
 
       .floating-actions {
         right: 15px;
-        bottom: 15px;
+        bottom: 86px;
         gap: 8px;
+        flex-direction: column;
       }
 
       .floating-actions .btn,
@@ -2632,6 +2633,15 @@
         width: 42px;
         height: 42px;
         border-radius: 14px;
+      }
+
+      .floating-actions .btn::after,
+      .floating-actions a.btn-icon::after {
+        display: none;
+      }
+
+      .botoes.footer-collapsed + .floating-actions {
+        bottom: 15px;
       }
 
       .botoes .btn,
@@ -2726,7 +2736,21 @@
         background: white !important;
         transform: none !important;
       }
-      .botoes, .loading-overlay, .status-contador, .toast, .popup-overlay, .whatsapp-btn, .btn-sair, .toggle-footer-btn, .btn-adicionar-recibo, .checkbox-recibo {
+      .gb-header,
+      .floating-actions,
+      .mobile-search-modal,
+      .mobile-search-backdrop,
+      .search-focus-overlay,
+      .botoes,
+      .loading-overlay,
+      .status-contador,
+      .toast,
+      .popup-overlay,
+      .whatsapp-btn,
+      .btn-sair,
+      .toggle-footer-btn,
+      .btn-adicionar-recibo,
+      .checkbox-recibo {
         display: none !important;
       }
       .recibo {
@@ -5218,6 +5242,12 @@
       });
 
       clone.querySelectorAll('.checkbox-recibo').forEach(checkbox => checkbox.remove());
+      clone.querySelectorAll('[id^="sugestoes-"]').forEach(item => item.remove());
+      clone.querySelectorAll('[style*="display: none"]').forEach(item => {
+        if (item.id && item.id.startsWith('sugestoes-')) {
+          item.remove();
+        }
+      });
 
       return clone.outerHTML;
     }
