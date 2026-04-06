@@ -2661,7 +2661,7 @@
       .floating-actions {
         left: 15px;
         right: auto;
-        bottom: 112px;
+        bottom: 148px;
         gap: 8px;
         flex-direction: column;
         align-items: flex-start;
@@ -2685,7 +2685,7 @@
       }
 
       .botoes.footer-collapsed + .floating-actions {
-        bottom: 15px;
+        bottom: 18px;
       }
 
       .botoes .btn,
