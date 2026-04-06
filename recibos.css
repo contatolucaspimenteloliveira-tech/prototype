@@ -988,11 +988,20 @@
       right: 0;
     }
 
-    .valor-topo label {
+    .numero-topo {
+      font-size: 12px;
+      text-align: left;
+      position: absolute;
+      left: 0;
+    }
+
+    .valor-topo label,
+    .numero-topo label {
       font-weight: bold;
     }
 
-    .valor-topo input {
+    .valor-topo input,
+    .numero-topo input {
       border: 2px solid #007BFF;
       border-radius: 8px;
       padding: 3px 8px;
@@ -1001,6 +1010,12 @@
       font-size: 12px;
       width: 130px;
       outline: none;
+    }
+
+    .numero-topo input {
+      width: 92px;
+      text-align: center;
+      letter-spacing: 0.04em;
     }
 
     .linha {
@@ -1733,7 +1748,8 @@
       color: #60a5fa !important;
     }
 
-    body.dark-mode .valor-topo input {
+    body.dark-mode .valor-topo input,
+    body.dark-mode .numero-topo input {
       background-color: #1f2937;
       border-color: #60a5fa;
       color: #e5e7eb;
