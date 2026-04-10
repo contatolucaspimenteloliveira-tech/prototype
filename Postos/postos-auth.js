@@ -244,6 +244,7 @@
       panelUserName.textContent = 'Usuário';
       currentAuthTab = 'records';
       updateAuthTabUi();
+      renderHomeRecords([]);
       setGateVisibility(true);
     }
   }
@@ -326,6 +327,78 @@
     updateGateStatus('Entre com Google para acessar o aplicativo.');
     setGateVisibility(true);
     return false;
+  }
+
+  function renderHomeRecords(records) {
+    const summary = document.getElementById('home-records-summary');
+    const list = document.getElementById('home-records-list');
+    if (!summary || !list) return;
+
+    const totalRegistros = records.length;
+    const totalLitros = records.reduce((acc, item) => acc + parseLitersToNumber(item.litros), 0);
+    const totalValor = records.reduce((acc, item) => acc + parseCurrencyToNumber(item.valor), 0);
+
+    summary.innerHTML = `
+      <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left">
+        <span class="block text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Registros</span>
+        <strong class="mt-2 block text-2xl font-bold text-slate-900">${totalRegistros}</strong>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left">
+        <span class="block text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Total em litros</span>
+        <strong class="mt-2 block text-2xl font-bold text-slate-900">${totalLitros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left">
+        <span class="block text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Total abastecido</span>
+        <strong class="mt-2 block text-2xl font-bold text-slate-900">${formatCurrencyBr(totalValor)}</strong>
+      </div>
+    `;
+
+    if (!currentSession || !currentSession.user) {
+      list.innerHTML = '<div class="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-slate-500">Entre com sua conta para visualizar seus abastecimentos.</div>';
+      return;
+    }
+
+    if (!records.length) {
+      list.innerHTML = '<div class="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-slate-500">Nenhum abastecimento encontrado para este perfil.</div>';
+      return;
+    }
+
+    const recentRecords = records.slice(0, 4);
+    list.innerHTML = recentRecords.map((record) => {
+      const valorFormatado = formatCurrencyBr(record.valor);
+      const litrosFormatados = parseLitersToNumber(record.litros).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return `
+        <article class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div>
+              <h4 class="text-base font-bold text-slate-900">${safeText(record.posto, 'Posto não informado')}</h4>
+              <p class="text-sm text-slate-500 mt-1">${safeText(record.cidade, 'Cidade não informada')} • ${formatDateBr(record.data_abastecimento)}</p>
+            </div>
+            <div class="inline-flex items-center justify-center rounded-xl bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">
+              ${valorFormatado}
+            </div>
+          </div>
+          <div class="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+            <div class="rounded-xl bg-slate-50 px-3 py-2">
+              <span class="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Motorista</span>
+              <strong class="mt-1 block text-slate-800">${safeText(record.motorista, '-')}</strong>
+            </div>
+            <div class="rounded-xl bg-slate-50 px-3 py-2">
+              <span class="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">KM atual</span>
+              <strong class="mt-1 block text-slate-800">${safeText(record.km_atual, '-')}</strong>
+            </div>
+            <div class="rounded-xl bg-slate-50 px-3 py-2">
+              <span class="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Litros</span>
+              <strong class="mt-1 block text-slate-800">${litrosFormatados}</strong>
+            </div>
+            <div class="rounded-xl bg-slate-50 px-3 py-2">
+              <span class="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Registro</span>
+              <strong class="mt-1 block text-slate-800">${record.created_at ? formatDateBr(record.created_at) : '-'}</strong>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join('');
   }
 
   function renderRecords(records) {
@@ -414,6 +487,7 @@
     if (!client || !currentSession || !currentSession.user) {
       currentRecords = [];
       renderRecords([]);
+      renderHomeRecords([]);
       return [];
     }
 
@@ -424,11 +498,13 @@
       if (result.error) throw result.error;
       currentRecords = Array.isArray(result.data) ? result.data : [];
       renderRecords(currentRecords);
+      renderHomeRecords(currentRecords);
       return currentRecords;
     } catch (error) {
       console.error('Erro ao carregar abastecimentos:', error);
       currentRecords = [];
       renderRecords([]);
+      renderHomeRecords([]);
       showAuthError('Não foi possível carregar o histórico agora.');
       return [];
     }
