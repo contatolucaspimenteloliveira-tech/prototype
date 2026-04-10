@@ -7,68 +7,50 @@
   let supabaseClient = null;
   let currentSession = null;
   let currentProfile = null;
+  let currentAuthTab = 'records';
+  let currentRecords = [];
+  let adminStations = [];
+  let adminDrivers = [];
 
   function withTimeout(promise, ms) {
     return Promise.race([
       promise,
-      new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('timeout')), ms);
-      })
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
     ]);
-  }
-
-  function getSupabaseLib() {
-    return window.supabase || globalThis.supabase || null;
   }
 
   function getSupabaseClient() {
     if (supabaseClient) return supabaseClient;
-
-    const lib = getSupabaseLib();
-    if (!lib || typeof lib.createClient !== 'function') {
-      return null;
-    }
-
+    const lib = window.supabase || globalThis.supabase || null;
+    if (!lib || typeof lib.createClient !== 'function') return null;
     supabaseClient = lib.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
-
     return supabaseClient;
   }
 
+  function isAdmin() {
+    return !!(currentProfile && currentProfile.perfil === 'admin');
+  }
+
   function updateGateStatus(text) {
-    const status = document.getElementById('auth-gate-status');
-    if (status) status.textContent = text;
+    const el = document.getElementById('auth-gate-status');
+    if (el) el.textContent = text;
   }
 
   function setGateVisibility(visible) {
     const gate = document.getElementById('auth-gate');
     if (!gate) return;
-
-    if (visible) {
-      gate.classList.remove('hidden');
-      gate.classList.add('block');
-      document.body.style.overflow = 'hidden';
-    } else {
-      gate.classList.add('hidden');
-      gate.classList.remove('block');
-      document.body.style.overflow = '';
-    }
+    gate.classList.toggle('hidden', !visible);
+    gate.classList.toggle('block', visible);
+    document.body.style.overflow = visible ? 'hidden' : '';
   }
 
   function clearAuthParamsFromUrl() {
     try {
       const url = new URL(window.location.href);
       url.hash = '';
-      url.searchParams.delete('code');
-      url.searchParams.delete('error');
-      url.searchParams.delete('error_code');
-      url.searchParams.delete('error_description');
-      url.searchParams.delete('sb');
+      ['code', 'error', 'error_code', 'error_description', 'sb'].forEach((param) => url.searchParams.delete(param));
       window.history.replaceState({}, document.title, url.toString());
     } catch (_error) {}
   }
@@ -76,11 +58,9 @@
   function getAuthErrorFromLocation() {
     try {
       const url = new URL(window.location.href);
-      const hash = url.hash ? new URLSearchParams(url.hash.replace(/^#/, '')) : null;
-      const search = url.searchParams;
-      const error = search.get('error') || (hash && hash.get('error'));
-      const description = search.get('error_description') || (hash && hash.get('error_description'));
-      if (!error && !description) return '';
+      const hashParams = url.hash ? new URLSearchParams(url.hash.replace(/^#/, '')) : null;
+      const error = url.searchParams.get('error') || (hashParams && hashParams.get('error'));
+      const description = url.searchParams.get('error_description') || (hashParams && hashParams.get('error_description'));
       return decodeURIComponent(description || error || '');
     } catch (_error) {
       return '';
@@ -89,8 +69,7 @@
 
   function getAuthCodeFromLocation() {
     try {
-      const url = new URL(window.location.href);
-      return url.searchParams.get('code') || '';
+      return new URL(window.location.href).searchParams.get('code') || '';
     } catch (_error) {
       return '';
     }
@@ -99,31 +78,14 @@
   function getPreferredRedirectUrl() {
     const origin = window.location.origin;
     const pathname = window.location.pathname || '';
-
-    if (pathname.indexOf('/prototype/Postos') !== -1) {
-      return `${origin}/prototype/Postos/`;
-    }
-
-    if (pathname.indexOf('/Postos') !== -1) {
-      return `${origin}/Postos/`;
-    }
-
-    if (pathname.endsWith('/index.html')) {
-      return origin + pathname.replace(/index\.html$/, '');
-    }
-
-    if (pathname.endsWith('/')) {
-      return origin + pathname;
-    }
-
-    return origin + pathname + '/';
+    if (pathname.includes('/prototype/Postos')) return `${origin}/prototype/Postos/`;
+    if (pathname.includes('/Postos')) return `${origin}/Postos/`;
+    if (pathname.endsWith('/index.html')) return origin + pathname.replace(/index\.html$/, '');
+    return pathname.endsWith('/') ? origin + pathname : `${origin}${pathname}/`;
   }
 
-  function safeText(value, fallback) {
-    if (value === null || value === undefined || value === '') {
-      return fallback || '';
-    }
-    return String(value);
+  function safeText(value, fallback = '') {
+    return value === null || value === undefined || value === '' ? fallback : String(value);
   }
 
   function getUserDisplayName(user, profile) {
@@ -135,67 +97,122 @@
   }
 
   function formatCurrencyBr(value) {
-    const numeric = Number(value || 0);
-    return numeric.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
   function parseCurrencyToNumber(value) {
     if (!value) return 0;
-    const normalized = String(value).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
-    const parsed = Number(normalized);
+    const parsed = Number(String(value).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.'));
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
   function parseLitersToNumber(value) {
     if (!value) return 0;
-    const normalized = String(value).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
-    const parsed = Number(normalized);
+    const parsed = Number(String(value).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.'));
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
   function formatDateBr(value) {
     if (!value) return '-';
     try {
-      const date = new Date(String(value).length === 10 ? `${value}T00:00:00` : value);
-      return new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      }).format(date);
+      const normalized = String(value).length === 10 ? `${value}T00:00:00` : value;
+      return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(normalized));
     } catch (_error) {
       return String(value);
     }
   }
 
   function setIntent(intent) {
-    try {
-      localStorage.setItem(AUTH_INTENT_KEY, intent);
-    } catch (_error) {}
+    try { localStorage.setItem(AUTH_INTENT_KEY, intent); } catch (_error) {}
   }
 
   function consumeIntent() {
-    let intent = '';
     try {
-      intent = localStorage.getItem(AUTH_INTENT_KEY) || '';
+      const value = localStorage.getItem(AUTH_INTENT_KEY) || '';
       localStorage.removeItem(AUTH_INTENT_KEY);
-    } catch (_error) {}
-    return intent;
+      return value;
+    } catch (_error) {
+      return '';
+    }
   }
 
   function showAuthError(message) {
-    if (typeof window.showErrorMessage === 'function') {
-      window.showErrorMessage(message);
-      return;
-    }
-    alert(message);
+    if (typeof window.showErrorMessage === 'function') window.showErrorMessage(message);
+    else alert(message);
   }
 
   function showAuthSuccess(message) {
-    if (typeof window.showSuccessMessage === 'function') {
-      window.showSuccessMessage(message);
+    if (typeof window.showSuccessMessage === 'function') window.showSuccessMessage(message);
+    else alert(message);
+  }
+
+  function getBasePostosData() {
+    const base = window.postosBaseData || window.postosData || {};
+    try { return JSON.parse(JSON.stringify(base)); } catch (_error) { return {}; }
+  }
+
+  function getMergedPostosData() {
+    const merged = getBasePostosData();
+    adminStations.forEach((station) => {
+      const city = safeText(station.cidade).trim();
+      const name = safeText(station.nome).trim();
+      if (!city || !name) return;
+      if (!merged[city]) merged[city] = [];
+      const exists = merged[city].some((item) => safeText(item.nome).trim().toLowerCase() === name.toLowerCase());
+      if (!exists) merged[city].push({ nome: name, endereco: safeText(station.endereco, city), link: safeText(station.mapa_url) });
+    });
+    return merged;
+  }
+
+  function syncStationsIntoApp() {
+    window.postosData = getMergedPostosData();
+  }
+
+  function populateCitySelect(selectedCity = '') {
+    const citySelect = document.getElementById('fuel-city');
+    if (!citySelect) return;
+    const currentValue = selectedCity || citySelect.value || '';
+    const cityNames = Object.keys(window.postosData || {}).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    citySelect.innerHTML = '<option value="">Selecione uma cidade</option>' + cityNames.map((city) => `<option value="${city.replace(/"/g, '&quot;')}">${city}</option>`).join('');
+    if (currentValue && cityNames.includes(currentValue)) citySelect.value = currentValue;
+  }
+
+  function populateStationSelect(cityName, selectedStation = '') {
+    const stationSelect = document.getElementById('fuel-station');
+    if (!stationSelect) return;
+    const stations = cityName && window.postosData && window.postosData[cityName] ? window.postosData[cityName] : [];
+    if (!stations.length) {
+      stationSelect.innerHTML = '<option value="">Selecione uma cidade primeiro</option>';
       return;
     }
-    alert(message);
+    stationSelect.innerHTML = '<option value="">Selecione um posto</option>' + stations.map((station) => {
+      const name = safeText(station.nome);
+      return `<option value="${name.replace(/"/g, '&quot;')}">${name}</option>`;
+    }).join('');
+    if (selectedStation) stationSelect.value = selectedStation;
+  }
+
+  function populateDriversDatalist() {
+    const datalist = document.getElementById('drivers-datalist');
+    if (!datalist) return;
+    datalist.innerHTML = adminDrivers.map((driver) => {
+      const name = safeText(driver.nome);
+      const label = [safeText(driver.placa), safeText(driver.telefone)].filter(Boolean).join(' • ');
+      return `<option value="${name.replace(/"/g, '&quot;')}" label="${label.replace(/"/g, '&quot;')}"></option>`;
+    }).join('');
+  }
+
+  function updateAuthTabUi() {
+    document.querySelectorAll('[data-auth-tab]').forEach((tab) => {
+      tab.classList.toggle('is-active', tab.dataset.authTab === currentAuthTab);
+    });
+
+    ['records', 'stations', 'drivers'].forEach((tabName) => {
+      const panel = document.getElementById(`auth-tab-${tabName}`);
+      if (!panel) return;
+      const shouldShow = tabName === currentAuthTab && (tabName === 'records' || isAdmin());
+      panel.classList.toggle('hidden', !shouldShow);
+    });
   }
 
   function updateAuthUi() {
@@ -204,7 +221,7 @@
     const userName = document.getElementById('auth-user-name');
     const panelUserName = document.getElementById('auth-panel-user-name');
     const badge = document.getElementById('auth-role-badge');
-
+    const adminTabs = document.getElementById('auth-admin-tabs');
     if (!loginButton || !userPanel || !userName || !panelUserName || !badge) return;
 
     if (currentSession && currentSession.user) {
@@ -213,20 +230,20 @@
       userPanel.classList.remove('hidden');
       userName.textContent = displayName;
       panelUserName.textContent = displayName;
-
-      if (currentProfile && currentProfile.perfil === 'admin') {
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
-      }
-
+      badge.classList.toggle('hidden', !isAdmin());
+      if (adminTabs) adminTabs.classList.toggle('hidden', !isAdmin());
+      if (!isAdmin()) currentAuthTab = 'records';
+      updateAuthTabUi();
       setGateVisibility(false);
     } else {
       loginButton.classList.remove('hidden');
       userPanel.classList.add('hidden');
       badge.classList.add('hidden');
+      if (adminTabs) adminTabs.classList.add('hidden');
       userName.textContent = 'Usuário';
       panelUserName.textContent = 'Usuário';
+      currentAuthTab = 'records';
+      updateAuthTabUi();
       setGateVisibility(true);
     }
   }
@@ -247,12 +264,7 @@
     };
 
     try {
-      const upsertResult = await client
-        .from('profiles')
-        .upsert(fallbackProfile, { onConflict: 'id' })
-        .select()
-        .maybeSingle();
-
+      const upsertResult = await client.from('profiles').upsert(fallbackProfile, { onConflict: 'id' }).select().maybeSingle();
       if (!upsertResult.error && upsertResult.data) {
         currentProfile = upsertResult.data;
         return currentProfile;
@@ -262,12 +274,7 @@
     }
 
     try {
-      const selectResult = await client
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-
+      const selectResult = await client.from('profiles').select('*').eq('id', user.id).maybeSingle();
       if (!selectResult.error && selectResult.data) {
         currentProfile = selectResult.data;
         return currentProfile;
@@ -293,13 +300,7 @@
       const sessionResult = await client.auth.getSession();
       currentSession = sessionResult && sessionResult.data ? sessionResult.data.session : null;
       if (currentSession && currentSession.user) {
-        currentProfile = {
-          id: currentSession.user.id,
-          nome: getUserDisplayName(currentSession.user, null),
-          email: currentSession.user.email || '',
-          perfil: 'motorista',
-          status: 'ativo'
-        };
+        currentProfile = { id: currentSession.user.id, nome: getUserDisplayName(currentSession.user, null), email: currentSession.user.email || '', perfil: 'motorista', status: 'ativo' };
         updateAuthUi();
         try {
           await withTimeout(ensureProfile(currentSession.user), 2500);
@@ -320,14 +321,8 @@
   }
 
   function requireAuth(intent) {
-    if (currentSession && currentSession.user) {
-      return true;
-    }
-
-    if (intent) {
-      setIntent(intent);
-    }
-
+    if (currentSession && currentSession.user) return true;
+    if (intent) setIntent(intent);
     updateGateStatus('Entre com Google para acessar o aplicativo.');
     setGateVisibility(true);
     return false;
@@ -343,36 +338,21 @@
     const totalValor = records.reduce((acc, item) => acc + parseCurrencyToNumber(item.valor), 0);
 
     summary.innerHTML = `
-      <div class="auth-summary-card">
-        <span>Registros</span>
-        <strong>${totalRegistros}</strong>
-      </div>
-      <div class="auth-summary-card">
-        <span>Total em litros</span>
-        <strong>${totalLitros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-      </div>
-      <div class="auth-summary-card">
-        <span>Total abastecido</span>
-        <strong>${formatCurrencyBr(totalValor)}</strong>
-      </div>
+      <div class="auth-summary-card"><span>Registros</span><strong>${totalRegistros}</strong></div>
+      <div class="auth-summary-card"><span>Total em litros</span><strong>${totalLitros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div>
+      <div class="auth-summary-card"><span>Total abastecido</span><strong>${formatCurrencyBr(totalValor)}</strong></div>
     `;
 
     if (!records.length) {
-      list.innerHTML = '<div class="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-slate-500">Nenhum abastecimento encontrado para este usuário.</div>';
+      list.innerHTML = '<div class="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-slate-500">Nenhum abastecimento encontrado para este perfil.</div>';
       return;
     }
 
     list.innerHTML = records.map((record) => {
       const valorFormatado = formatCurrencyBr(record.valor);
-      const litrosFormatados = parseLitersToNumber(record.litros).toLocaleString('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-      const createdAt = record.created_at ? new Intl.DateTimeFormat('pt-BR', {
-        dateStyle: 'short',
-        timeStyle: 'short'
-      }).format(new Date(record.created_at)) : '-';
-
+      const litrosFormatados = parseLitersToNumber(record.litros).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const createdAt = record.created_at ? new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(record.created_at)) : '-';
+      const adminMeta = isAdmin() ? `<div class="auth-record-meta"><span>Usuário</span><strong>${safeText(record.profiles?.nome || record.profiles?.email || record.user_id, '-')}</strong></div>` : '';
       return `
         <article class="auth-record-card">
           <div class="auth-record-topline">
@@ -383,66 +363,130 @@
             <div class="auth-record-badge">${valorFormatado}</div>
           </div>
           <div class="auth-record-grid">
-            <div class="auth-record-meta">
-              <span>Motorista</span>
-              <strong>${safeText(record.motorista, '-')}</strong>
-            </div>
-            <div class="auth-record-meta">
-              <span>KM atual</span>
-              <strong>${safeText(record.km_atual, '-')}</strong>
-            </div>
-            <div class="auth-record-meta">
-              <span>Litros</span>
-              <strong>${litrosFormatados}</strong>
-            </div>
-            <div class="auth-record-meta">
-              <span>Registro online</span>
-              <strong>${createdAt}</strong>
-            </div>
+            <div class="auth-record-meta"><span>Motorista</span><strong>${safeText(record.motorista, '-')}</strong></div>
+            <div class="auth-record-meta"><span>KM atual</span><strong>${safeText(record.km_atual, '-')}</strong></div>
+            <div class="auth-record-meta"><span>Litros</span><strong>${litrosFormatados}</strong></div>
+            <div class="auth-record-meta"><span>Registro online</span><strong>${createdAt}</strong></div>
+            ${adminMeta}
           </div>
         </article>
       `;
     }).join('');
   }
 
+  function renderStations(stations) {
+    const summary = document.getElementById('admin-stations-summary');
+    const list = document.getElementById('admin-stations-list');
+    if (!summary || !list) return;
+    const uniqueCities = [...new Set(stations.map((item) => safeText(item.cidade).trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    summary.innerHTML = `<span>${stations.length} posto(s)</span><span>${uniqueCities.length} cidade(s)</span>`;
+    if (!stations.length) {
+      list.innerHTML = '<div class="rounded-2xl border border-dashed border-slate-300 p-5 text-center text-slate-500">Nenhum posto adicional cadastrado.</div>';
+      return;
+    }
+    list.innerHTML = stations.map((station) => `
+      <article class="auth-admin-list-card">
+        <div class="auth-admin-list-card__top"><div><h4>${safeText(station.nome, 'Posto sem nome')}</h4><p>${safeText(station.cidade, 'Cidade não informada')}</p></div><span class="auth-admin-chip">${safeText(station.status, 'ativo')}</span></div>
+        <div class="auth-admin-list-card__meta"><span><strong>Endereço:</strong> ${safeText(station.endereco, 'Não informado')}</span><span><strong>Telefone:</strong> ${safeText(station.telefone, 'Não informado')}</span></div>
+      </article>
+    `).join('');
+  }
+
+  function renderDrivers(drivers) {
+    const summary = document.getElementById('admin-drivers-summary');
+    const list = document.getElementById('admin-drivers-list');
+    if (!summary || !list) return;
+    summary.innerHTML = `<span>${drivers.length} motorista(s)</span><span>${drivers.filter((item) => safeText(item.placa)).length} com placa vinculada</span>`;
+    if (!drivers.length) {
+      list.innerHTML = '<div class="rounded-2xl border border-dashed border-slate-300 p-5 text-center text-slate-500">Nenhum motorista cadastrado.</div>';
+      return;
+    }
+    list.innerHTML = drivers.map((driver) => `
+      <article class="auth-admin-list-card">
+        <div class="auth-admin-list-card__top"><div><h4>${safeText(driver.nome, 'Motorista sem nome')}</h4><p>${safeText(driver.placa, 'Sem placa vinculada')}</p></div><span class="auth-admin-chip">${safeText(driver.cpf, 'Sem CPF')}</span></div>
+        <div class="auth-admin-list-card__meta"><span><strong>Telefone:</strong> ${safeText(driver.telefone, 'Não informado')}</span><span><strong>Criado em:</strong> ${driver.created_at ? formatDateBr(driver.created_at) : '-'}</span></div>
+      </article>
+    `).join('');
+  }
+
   async function fetchRecords() {
     const client = getSupabaseClient();
     if (!client || !currentSession || !currentSession.user) {
+      currentRecords = [];
       renderRecords([]);
       return [];
     }
 
     try {
-      let query = client
-        .from('fuel_records')
-        .select('*')
-        .order('data_abastecimento', { ascending: false })
-        .order('created_at', { ascending: false });
-
-      if (!currentProfile || currentProfile.perfil !== 'admin') {
-        query = query.eq('user_id', currentSession.user.id);
-      }
-
+      let query = client.from('fuel_records').select('*, profiles(nome, email)').order('data_abastecimento', { ascending: false }).order('created_at', { ascending: false });
+      if (!isAdmin()) query = query.eq('user_id', currentSession.user.id);
       const result = await query;
       if (result.error) throw result.error;
-
-      const records = Array.isArray(result.data) ? result.data : [];
-      renderRecords(records);
-      return records;
+      currentRecords = Array.isArray(result.data) ? result.data : [];
+      renderRecords(currentRecords);
+      return currentRecords;
     } catch (error) {
       console.error('Erro ao carregar abastecimentos:', error);
+      currentRecords = [];
       renderRecords([]);
-      showAuthError('Não foi possível carregar seu histórico agora.');
+      showAuthError('Não foi possível carregar o histórico agora.');
       return [];
     }
   }
 
-  async function saveFuelRecord(payload) {
+  async function loadAdminStations() {
     const client = getSupabaseClient();
     if (!client || !currentSession || !currentSession.user) {
-      return { skipped: true };
+      adminStations = [];
+      syncStationsIntoApp();
+      renderStations(adminStations);
+      populateCitySelect();
+      populateStationSelect(document.getElementById('fuel-city')?.value || '');
+      return [];
     }
 
+    try {
+      const result = await client.from('stations').select('*').order('cidade', { ascending: true }).order('nome', { ascending: true });
+      if (result.error) throw result.error;
+      adminStations = Array.isArray(result.data) ? result.data : [];
+    } catch (error) {
+      console.warn('Não foi possível carregar postos adicionais:', error);
+      adminStations = [];
+    }
+
+    syncStationsIntoApp();
+    populateCitySelect();
+    populateStationSelect(document.getElementById('fuel-city')?.value || '');
+    renderStations(adminStations);
+    return adminStations;
+  }
+
+  async function loadDrivers() {
+    const client = getSupabaseClient();
+    if (!client || !currentSession || !currentSession.user) {
+      adminDrivers = [];
+      populateDriversDatalist();
+      renderDrivers(adminDrivers);
+      return [];
+    }
+
+    try {
+      const result = await client.from('drivers').select('*').order('nome', { ascending: true });
+      if (result.error) throw result.error;
+      adminDrivers = Array.isArray(result.data) ? result.data : [];
+    } catch (error) {
+      console.warn('Não foi possível carregar motoristas:', error);
+      adminDrivers = [];
+    }
+
+    populateDriversDatalist();
+    renderDrivers(adminDrivers);
+    return adminDrivers;
+  }
+
+  async function saveFuelRecord(payload) {
+    const client = getSupabaseClient();
+    if (!client || !currentSession || !currentSession.user) return { skipped: true };
     const insertPayload = {
       user_id: currentSession.user.id,
       motorista: payload.motorista,
@@ -454,10 +498,35 @@
       data_abastecimento: payload.data_abastecimento,
       comprovante_url: payload.comprovante_url || null
     };
-
     const result = await client.from('fuel_records').insert(insertPayload);
     if (result.error) throw result.error;
     return { ok: true };
+  }
+
+  async function saveStation(payload) {
+    const client = getSupabaseClient();
+    if (!client || !currentSession || !currentSession.user) throw new Error('auth_required');
+    const result = await client.from('stations').insert({
+      cidade: safeText(payload.cidade).trim(),
+      nome: safeText(payload.nome).trim(),
+      endereco: safeText(payload.endereco).trim(),
+      telefone: safeText(payload.telefone).trim(),
+      mapa_url: safeText(payload.mapa_url).trim(),
+      status: 'ativo'
+    });
+    if (result.error) throw result.error;
+  }
+
+  async function saveDriver(payload) {
+    const client = getSupabaseClient();
+    if (!client || !currentSession || !currentSession.user) throw new Error('auth_required');
+    const result = await client.from('drivers').insert({
+      nome: safeText(payload.nome).trim(),
+      cpf: safeText(payload.cpf).trim(),
+      telefone: safeText(payload.telefone).trim(),
+      placa: safeText(payload.placa).trim()
+    });
+    if (result.error) throw result.error;
   }
 
   function resetLoadingState() {
@@ -466,7 +535,6 @@
       const circle = iconEl ? iconEl.querySelector('div') : null;
       const spinner = document.getElementById(`step-${i}-spinner`);
       const checkmark = document.getElementById(`step-${i}-check`);
-
       if (circle) {
         circle.classList.remove('border-green-600', 'bg-green-50');
         circle.classList.add('border-gray-300');
@@ -474,7 +542,6 @@
       if (spinner) spinner.classList.add('hidden');
       if (checkmark) checkmark.classList.add('hidden');
     }
-
     const progressBar = document.getElementById('progress-bar');
     if (progressBar) progressBar.style.width = '0%';
   }
@@ -486,73 +553,13 @@
     modal.classList.remove('flex');
   }
 
-  window.closeAuthPanel = closeAuthPanelInternal;
-
-  window.openAuthPanel = async function openAuthPanel() {
-    if (!requireAuth('history')) return;
-    const modal = document.getElementById('auth-panel-modal');
-    if (!modal) return;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    await window.refreshAuthRecords();
-  };
-
-  window.refreshAuthRecords = async function refreshAuthRecords() {
-    if (!requireAuth('history')) return;
-    await fetchRecords();
-  };
-
-  window.signInWithGoogle = async function signInWithGoogle() {
-    const client = getSupabaseClient();
-    if (!client) {
-      showAuthError('Não foi possível iniciar o login agora.');
-      return;
-    }
-
-    try {
-      updateGateStatus('Redirecionando para o Google...');
-      await client.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: getPreferredRedirectUrl()
-        }
-      });
-    } catch (error) {
-      console.error('Erro ao iniciar login Google:', error);
-      showAuthError('Não foi possível iniciar o login com Google.');
-      updateGateStatus('Não foi possível iniciar o login com Google.');
-    }
-  };
-
-  window.signOutUser = async function signOutUser() {
-    const client = getSupabaseClient();
-    if (!client) return;
-
-    try {
-      await client.auth.signOut();
-    } catch (error) {
-      console.error('Erro ao sair da sessão:', error);
-    }
-
-    currentSession = null;
-    currentProfile = null;
-    updateAuthUi();
-    closeAuthPanelInternal();
-    updateGateStatus('Sessão encerrada. Entre com Google para continuar.');
-    showAuthSuccess('Sessão encerrada com sucesso.');
-  };
-
   function applyAuthIntent() {
     const intent = consumeIntent();
-    if (!intent) return;
-
-    if (intent === 'fuel-form' && typeof window.openFuelFormMenu === 'function') {
-      window.openFuelFormMenu();
-    }
-
-    if (intent === 'history') {
-      window.openAuthPanel();
-    }
+    if (!intent || !currentSession || !currentSession.user) return;
+    if (intent === 'history') return window.openAuthPanel();
+    if (intent === 'fuel-form' && typeof window.openFuelFormMenu === 'function') return window.openFuelFormMenu();
+    if (intent === 'dashboard' && typeof window.showDashboard === 'function') return window.showDashboard();
+    if (intent === 'home' && typeof window.goToWelcome === 'function') return window.goToWelcome();
   }
 
   function installActionGuards() {
@@ -560,15 +567,21 @@
       const originalOpenFuelFormMenu = window.openFuelFormMenu;
       window.openFuelFormMenu = function guardedOpenFuelFormMenu() {
         if (!requireAuth('fuel-form')) return;
-        return originalOpenFuelFormMenu.apply(this, arguments);
+        const result = originalOpenFuelFormMenu.apply(this, arguments);
+        populateCitySelect();
+        populateStationSelect('');
+        return result;
       };
     }
 
     if (typeof window.openFuelForm === 'function') {
       const originalOpenFuelForm = window.openFuelForm;
-      window.openFuelForm = function guardedOpenFuelForm() {
+      window.openFuelForm = function guardedOpenFuelForm(postoNome, cidadeNome) {
         if (!requireAuth('fuel-form')) return;
-        return originalOpenFuelForm.apply(this, arguments);
+        const result = originalOpenFuelForm.apply(this, arguments);
+        populateCitySelect(cidadeNome || '');
+        populateStationSelect(cidadeNome || '', postoNome || '');
+        return result;
       };
     }
 
@@ -588,9 +601,11 @@
       };
     }
 
+    const citySelect = document.getElementById('fuel-city');
+    if (citySelect) citySelect.addEventListener('change', function onAuthManagedCityChange() { populateStationSelect(this.value); });
+
     window.submitFuelForm = async function submitFuelFormWithAuth(e) {
       e.preventDefault();
-
       if (!requireAuth('fuel-form')) return;
 
       const motorista = document.getElementById('driver-name').value;
@@ -602,32 +617,15 @@
       const data = document.getElementById('fuel-date').value;
       const fileInput = document.getElementById('fuel-photo');
 
-      if (!kmAtual) {
-        showAuthError('Informe o KM atual do veículo');
-        return;
-      }
-
-      if (!litros) {
-        showAuthError('Informe a quantidade de litros');
-        return;
-      }
-
-      if (!valor) {
-        showAuthError('Informe o valor do abastecimento');
-        return;
-      }
-
-      if (!fileInput.files || fileInput.files.length === 0) {
-        showAuthError('Por favor, selecione uma foto do comprovante');
-        return;
-      }
+      if (!kmAtual) return showAuthError('Informe o KM atual do veículo.');
+      if (!litros) return showAuthError('Informe a quantidade de litros.');
+      if (!valor) return showAuthError('Informe o valor do abastecimento.');
+      if (!fileInput.files || !fileInput.files.length) return showAuthError('Selecione uma foto do comprovante.');
 
       const file = fileInput.files[0];
-      const dateObj = new Date(data + 'T00:00:00');
-      const dataFormatada = dateObj.toLocaleDateString('pt-BR');
-
-      const mensagem = `🚗 *NOVO REGISTRO DE ABASTECIMENTO*%0A%0A👤 *Motorista:* ${motorista}%0A📍 *Cidade:* ${cidade}%0A⛽ *Posto:* ${posto}%0A🧭 *KM Atual:* ${kmAtual}%0A🛢️ *Litros:* ${litros}%0A💵 *Valor:* ${valor}%0A📅 *Data:* ${dataFormatada}`;
-      const whatsappUrl = `https://wa.me/27998041452?text=${mensagem}`;
+      const dataFormatada = new Date(`${data}T00:00:00`).toLocaleDateString('pt-BR');
+      const whatsappMessage = `🚗 *NOVO REGISTRO DE ABASTECIMENTO*%0A%0A👤 *Motorista:* ${motorista}%0A📍 *Cidade:* ${cidade}%0A⛽ *Posto:* ${posto}%0A🧭 *KM Atual:* ${kmAtual}%0A🛢️ *Litros:* ${litros}%0A💵 *Valor:* ${valor}%0A📅 *Data:* ${dataFormatada}`;
+      const whatsappUrl = `https://wa.me/27998041452?text=${whatsappMessage}`;
 
       document.getElementById('loading-modal').classList.remove('hidden');
       document.getElementById('fuel-form-modal').classList.add('hidden');
@@ -642,37 +640,20 @@
           sendFormData.append('litros', litros);
           sendFormData.append('valor', valor);
           sendFormData.append('image', fileData.target.result);
-
-          await fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            body: sendFormData,
-            mode: 'no-cors'
-          });
+          await fetch(APPS_SCRIPT_URL, { method: 'POST', body: sendFormData, mode: 'no-cors' });
 
           try {
-            await saveFuelRecord({
-              motorista,
-              cidade,
-              posto,
-              km_atual: kmAtual,
-              litros: parseLitersToNumber(litros),
-              valor: parseCurrencyToNumber(valor),
-              data_abastecimento: data,
-              comprovante_url: 'upload_apps_script'
-            });
+            await saveFuelRecord({ motorista, cidade, posto, km_atual: kmAtual, litros: parseLitersToNumber(litros), valor: parseCurrencyToNumber(valor), data_abastecimento: data, comprovante_url: 'upload_apps_script' });
           } catch (saveError) {
             console.error('Erro ao salvar no Supabase:', saveError);
           }
 
           await progressPromise;
-
           setTimeout(() => {
             fileInput.value = '';
             document.getElementById('fuel-form').reset();
             document.getElementById('loading-modal').classList.add('hidden');
-            if (typeof window.closeFuelForm === 'function') {
-              window.closeFuelForm();
-            }
+            if (typeof window.closeFuelForm === 'function') window.closeFuelForm();
             resetLoadingState();
             fetchRecords();
             window.open(whatsappUrl, '_blank');
@@ -680,20 +661,132 @@
           }, 300);
         } catch (error) {
           console.error('Erro ao enviar abastecimento:', error);
-          showAuthError('Erro ao enviar foto. Tente novamente.');
+          showAuthError('Erro ao enviar o comprovante. Tente novamente.');
           document.getElementById('loading-modal').classList.add('hidden');
           document.getElementById('fuel-form-modal').classList.remove('hidden');
           resetLoadingState();
         }
       };
-
       reader.readAsDataURL(file);
     };
   }
 
+  function bindAdminForms() {
+    const stationForm = document.getElementById('admin-station-form');
+    const driverForm = document.getElementById('admin-driver-form');
+
+    if (stationForm) {
+      stationForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!isAdmin()) return showAuthError('Apenas administradores podem cadastrar postos.');
+        try {
+          await saveStation({
+            cidade: document.getElementById('admin-station-city').value,
+            nome: document.getElementById('admin-station-name').value,
+            endereco: document.getElementById('admin-station-address').value,
+            telefone: document.getElementById('admin-station-phone').value,
+            mapa_url: document.getElementById('admin-station-map').value
+          });
+          stationForm.reset();
+          await loadAdminStations();
+          showAuthSuccess('Posto salvo com sucesso.');
+        } catch (error) {
+          console.error('Erro ao salvar posto:', error);
+          showAuthError('Não foi possível salvar o posto. Confira as policies do Supabase para administradores.');
+        }
+      });
+    }
+
+    if (driverForm) {
+      driverForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!isAdmin()) return showAuthError('Apenas administradores podem cadastrar motoristas.');
+        try {
+          await saveDriver({
+            nome: document.getElementById('admin-driver-name').value,
+            cpf: document.getElementById('admin-driver-cpf').value,
+            telefone: document.getElementById('admin-driver-phone').value,
+            placa: document.getElementById('admin-driver-plate').value
+          });
+          driverForm.reset();
+          await loadDrivers();
+          showAuthSuccess('Motorista salvo com sucesso.');
+        } catch (error) {
+          console.error('Erro ao salvar motorista:', error);
+          showAuthError('Não foi possível salvar o motorista. Confira as policies do Supabase para administradores.');
+        }
+      });
+    }
+  }
+
+  window.closeAuthPanel = closeAuthPanelInternal;
+  window.switchAuthTab = function switchAuthTab(tabName) {
+    if (tabName !== 'records' && !isAdmin()) return;
+    currentAuthTab = tabName;
+    updateAuthTabUi();
+  };
+
+  window.openAuthPanel = async function openAuthPanel() {
+    if (!requireAuth('history')) return;
+    const modal = document.getElementById('auth-panel-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    await window.refreshAuthPanel();
+  };
+
+  window.refreshAuthRecords = async function refreshAuthRecords() {
+    return fetchRecords();
+  };
+
+  window.refreshAuthPanel = async function refreshAuthPanel() {
+    if (!requireAuth('history')) return;
+    await fetchRecords();
+    await loadAdminStations();
+    await loadDrivers();
+    updateAuthTabUi();
+  };
+
+  window.signInWithGoogle = async function signInWithGoogle() {
+    const client = getSupabaseClient();
+    if (!client) return showAuthError('Não foi possível iniciar o login agora.');
+    try {
+      updateGateStatus('Redirecionando para o Google...');
+      await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: getPreferredRedirectUrl() } });
+    } catch (error) {
+      console.error('Erro ao iniciar login com Google:', error);
+      updateGateStatus('Falha ao iniciar o login. Tente novamente.');
+      showAuthError('Não foi possível iniciar o login com Google.');
+    }
+  };
+
+  window.signOutUser = async function signOutUser() {
+    const client = getSupabaseClient();
+    if (!client) return;
+    try { await client.auth.signOut(); } catch (error) { console.error('Erro ao encerrar sessão:', error); }
+    closeAuthPanelInternal();
+    currentSession = null;
+    currentProfile = null;
+    currentRecords = [];
+    adminStations = [];
+    adminDrivers = [];
+    syncStationsIntoApp();
+    populateCitySelect();
+    populateStationSelect('');
+    populateDriversDatalist();
+    updateAuthUi();
+    updateGateStatus('Sessão encerrada. Entre novamente para continuar.');
+    setGateVisibility(true);
+  };
+
   async function bootstrapAuth() {
     const client = getSupabaseClient();
     installActionGuards();
+    bindAdminForms();
+    syncStationsIntoApp();
+    populateCitySelect();
+    populateStationSelect('');
+    populateDriversDatalist();
     setGateVisibility(true);
     updateGateStatus('Verificando sua sessão...');
 
@@ -736,45 +829,38 @@
     client.auth.onAuthStateChange(async (_event, session) => {
       currentSession = session || null;
       if (currentSession && currentSession.user) {
-        currentProfile = {
-          id: currentSession.user.id,
-          nome: getUserDisplayName(currentSession.user, null),
-          email: currentSession.user.email || '',
-          perfil: 'motorista',
-          status: 'ativo'
-        };
+        currentProfile = { id: currentSession.user.id, nome: getUserDisplayName(currentSession.user, null), email: currentSession.user.email || '', perfil: 'motorista', status: 'ativo' };
         updateAuthUi();
         try {
           await withTimeout(ensureProfile(currentSession.user), 2500);
+          await loadAdminStations();
+          await loadDrivers();
         } catch (profileError) {
           console.warn('Perfil não confirmou no onAuthStateChange:', profileError);
         }
       } else {
         currentProfile = null;
+        adminStations = [];
+        adminDrivers = [];
       }
       updateAuthUi();
     });
 
     try {
       await withTimeout(refreshSessionState(), 3500);
+      await loadAdminStations();
+      await loadDrivers();
     } catch (sessionError) {
       console.error('Sessão demorou além do esperado:', sessionError);
       currentSession = null;
       currentProfile = null;
       updateAuthUi();
-      updateGateStatus('Sessão não confirmada. Clique para entrar com Google.');
+      updateGateStatus('Sessão não confirmada. Clique em Entrar com Google.');
     }
 
-    if (!currentSession || !currentSession.user) {
-      updateGateStatus('Sessão não encontrada. Clique em Entrar com Google.');
-    } else {
-      updateGateStatus('Sessão confirmada.');
-    }
-
+    updateGateStatus(currentSession && currentSession.user ? 'Sessão confirmada.' : 'Sessão não encontrada. Clique em Entrar com Google.');
     applyAuthIntent();
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    bootstrapAuth();
-  });
+  document.addEventListener('DOMContentLoaded', bootstrapAuth);
 })();
